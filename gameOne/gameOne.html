@@ -16,10 +16,12 @@
       let ballY = 5;
       let ballSpeedY = 7;
 
-      const brick_width = 100;
-      const brick_height = 50;
-      const brick_count = 10;
-      let brickGrid = new Array(brick_count); 
+      const brick_width = 80;
+      const brick_height = 20;
+      const brick_columns = 10;
+      const brick_rows = 14;
+      const brick_gap = 2;
+      let brickGrid = new Array(brick_columns); 
 
       let canvas;
       let canvasContext;
@@ -42,6 +44,7 @@
         canvas.addEventListener('mousemove', updateMousePosition);
 
         brickReset();
+        ballReset();
       }
       
       const updateAll = () => {
@@ -54,13 +57,14 @@
       }
 
       const brickReset = () => {
-        for (let i=0;i<brick_count; i++) {
-          if (Math.random()<0.5) {
-            brickGrid[i] = true;
-          } else {
-            brickGrid[i] = false
-          }  // end of else (random check)
+        for (let eachCol=0;eachCol<brick_columns*brick_rows; eachCol++) {
+          // if (Math.random()<0.5) {
+            brickGrid[eachCol] = true;
+          // } else {
+            // brickGrid[eachCol] = false
+          // }  // end of else (random check)
         }   //end of each brick
+        // brickGrid[10] = false;
       }   // end of brick set for loop
 
       const updateMousePosition = (event) => {
@@ -91,7 +95,20 @@
           if (ballY < 0) {                //top edge
             ballSpeedY *= -1;
           }
- 
+          
+          const ballBrickColumn = Math.floor(ballX / brick_width);
+          const ballBrickRow = Math.floor(ballY / brick_height);
+          const brickIndexUnderBall = rowColToArrayIndex(ballBrickColumn, ballBrickRow)
+          
+          if (ballBrickColumn >= 0 && ballBrickColumn < brick_columns &&
+              ballBrickRow >= 0 && ballBrickRow < brick_rows) {
+                if (brickGrid[brickIndexUnderBall]) {
+                  brickGrid[brickIndexUnderBall] = false;
+                  ballSpeedY *=-1;
+                }
+          }
+
+
           // check if the ball has Overlapped the paddle
           const paddleTopEdgeY = canvas.height - paddle_distance_from_edge;
           const paddleBottomEdgeY = paddleTopEdgeY + paddle_height;
@@ -117,7 +134,8 @@
           colorCircle(ballX, ballY, ballDiameter, "white");               // draw ball
           colorRect(paddleX, canvas.height - paddle_distance_from_edge, paddle_width, paddle_height, 'white');
           drawBricks();
-          colorText(mouseX + ',' + mouseY, mouseX, mouseY, 'yellow');
+          colorText(mouseBrickColumn + ',' + mouseBrickRow + ':' + brickIndexUnderMouse, mouseX, mouseY, 'yellow');
+          
         }
 
       const colorRect = (topLeftX, topLeftY, boxWidth, boxHeight, fillColor) => {
@@ -133,13 +151,21 @@
           canvasContext.fill();
       }
       
+      const rowColToArrayIndex = (col, row) => {
+        return col + brick_columns * row;
+      }
+
       const drawBricks = () => {
-        for  (let i=0; i<brickGrid.length; i++) {
-          if (brickGrid[i]) {
-          colorRect(brick_width*i,0, brick_width-2, brick_height, 'blue');  
-          } 
+        for  (let eachRow=0; eachRow<brick_rows; eachRow++) {
+          for  (let eachCol=0; eachCol<brick_columns; eachCol++) { 
+            const arrayIndex = rowColToArrayIndex(eachCol, eachRow);
+            if (brickGrid[arrayIndex]) {
+              colorRect(brick_width*eachCol, brick_height*eachRow,
+                  brick_width-brick_gap, brick_height-brick_gap, 'blue');
+            // colorRect(brick_width*eachCol,0, brick_width-2, brick_height, 'blue');  
+            } 
+          }
         }
-        
       }
 
       const colorText = (showWords, textX, textY, fillColor) => {
